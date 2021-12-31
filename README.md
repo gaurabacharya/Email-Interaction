@@ -1,4 +1,5 @@
 # Email-Interaction
+Uses an adjacency matrix graph representation in Java to analyze email interactions
 
 ## Reason for Building:
 To develop a system to analyze email interaction of user within organizations. Using datasets from Stanford (https://snap.stanford.edu/data/email-Eu-core-temporal.html) which includes sender User ID, receiver User ID, and send time of the emails in ".txt" files. 
