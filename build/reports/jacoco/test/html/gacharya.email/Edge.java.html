@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Edge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Email-Interaction</a> &gt; <a href="index.source.html" class="el_package">gacharya.email</a> &gt; <span class="el_source">Edge.java</span></div><h1>Edge.java</h1><pre class="source lang-java linenums">package gacharya.email;
+
+public class Edge {
+    public final Vertex v1;
+    public final Vertex v2;
+    public final int timeStamp;
+    /*
+        RI: v1 is base vertex where or starting node, v2 is vertex where edge is going to or
+            end node, TimeStamp is the time in seconds (Timestamp &gt;= 0) that v1 and v2 interacted.
+        AF: Represented an Edge that is directed from v1 to v2
+    */
+
+    /**
+     * Create an Edge that is directed from v1 to v2
+     *
+     * @param v1        starting vertex
+     * @param v2        end vertex
+     * @param timeStamp
+     */
+<span class="nc" id="L20">    public Edge(Vertex v1, Vertex v2, int timeStamp) {</span>
+<span class="nc" id="L21">        this.v1 = v1;</span>
+<span class="nc" id="L22">        this.v2 = v2;</span>
+<span class="nc" id="L23">        this.timeStamp = timeStamp;</span>
+<span class="nc" id="L24">    }</span>
+
+    /**
+     * Check equality of edges. This method overrides equals( ) in Object.
+     *
+     * @return true if this edge is equal to the obj otherwise return false
+     */
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if (!(o instanceof Edge)) {</span>
+<span class="nc" id="L34">            return false;</span>
+        }
+<span class="nc" id="L36">        Edge other = (Edge) o;</span>
+<span class="nc bnc" id="L37" title="All 4 branches missed.">        return v1.equals(other.v1) &amp;&amp; v2.equals(other.v2);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

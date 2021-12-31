@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DWInteractionGraph.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Email-Interaction</a> &gt; <a href="index.source.html" class="el_package">gacharya.email</a> &gt; <span class="el_source">DWInteractionGraph.java</span></div><h1>DWInteractionGraph.java</h1><pre class="source lang-java linenums">package gacharya.email;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
+
+public class DWInteractionGraph  implements InteractionGraph {
+
+<span class="nc" id="L20">    private final ArrayList&lt;Vertex&gt; vertices = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L21">    private final ArrayList&lt;Edge&gt; edges = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L22">    private int[][] representation = new int[1][1];</span>
+<span class="nc" id="L23">    private int matSize = 1;</span>
+
+    /*
+       RI: Graph is an adjacency matrix, with vertices and edges, where each vertices is a point
+       and each edge connects two points together from sender to receiver. No two vertices can contain the
+       same data, and no two edges are equivalent.
+       masSize &gt;= 1 and representation[][] is square matrix.
+
+       AF: The graph represents the email interaction between two users and the time in which these
+       interaction took place.
+     */
+
+    /**
+     * Creates a new DWInteractionGraph using an email interaction file.
+     * The email interaction file will be in the resources directory.
+     *
+     * @param fileName the name of the file in the resources
+     *                 directory containing email interactions
+     */
+<span class="nc" id="L42">    public DWInteractionGraph(String fileName) {</span>
+<span class="nc" id="L43">        int sender = 0;</span>
+<span class="nc" id="L44">        int receiver = 1;</span>
+<span class="nc" id="L45">        int timeStamp = 2;</span>
+
+        try {
+<span class="nc" id="L48">            BufferedReader reader = new BufferedReader(new FileReader(fileName));</span>
+            String currentLine;
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            while ((currentLine = reader.readLine()) != null) {</span>
+<span class="nc" id="L51">                List&lt;String&gt; dataLine = Arrays.asList(currentLine.split(&quot; &quot;).clone());</span>
+
+<span class="nc" id="L53">                Vertex v1 =</span>
+<span class="nc" id="L54">                    new Vertex(dataLine.get(sender), Integer.parseInt(dataLine.get(sender)));</span>
+<span class="nc" id="L55">                Vertex v2 =</span>
+<span class="nc" id="L56">                    new Vertex(dataLine.get(receiver), Integer.parseInt(dataLine.get(receiver)));</span>
+
+<span class="nc" id="L58">                addToGraph(v1, v2, Integer.parseInt(dataLine.get(timeStamp)));</span>
+<span class="nc" id="L59">            }</span>
+<span class="nc" id="L60">            reader.close();</span>
+<span class="nc" id="L61">        } catch (IOException e) {</span>
+<span class="nc" id="L62">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L63">        }</span>
+<span class="nc" id="L64">    }</span>
+
+    /**
+     * Creates a new DWInteractionGraph from a DWInteractionGraph object
+     * and considering a time window filter.
+     *
+     * @param inputDWIG  a DWInteractionGraph object
+     * @param timeFilter an integer array of length 2: [t0, t1]
+     *                   where t0 &lt;= t1. The created DWInteractionGraph
+     *                   should only include those emails in the input
+     *                   DWInteractionGraph with send time t in the
+     *                   t0 &lt;= t &lt;= t1 range.
+     */
+<span class="nc" id="L77">    public DWInteractionGraph(DWInteractionGraph inputDWIG, int[] timeFilter) {</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (Edge inputEdge : inputDWIG.edges) {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (withinTimeFilter(inputEdge, timeFilter)) {</span>
+<span class="nc" id="L81">                addToGraph(inputEdge.v1, inputEdge.v2, inputEdge.timeStamp);</span>
+            }
+<span class="nc" id="L83">        }</span>
+<span class="nc" id="L84">    }</span>
+
+    /**
+     * Helper Method for DWInteractionGraph
+     *
+     * @param edge       time to check against the timeFilter
+     * @param timeFilter an integer array of length 2: [t0, t1]
+     *                   where t0 &lt;= t1. The created DWInteractionGraph
+     *                   should only include those emails in the input
+     *                   DWInteractionGraph with send time t in the
+     *                   t0 &lt;= t &lt;= t1 range.
+     * @return True if t0 &lt;= inputTime &lt;= t1 range, false otherwise
+     */
+    private boolean withinTimeFilter(Edge edge, int[] timeFilter) {
+<span class="nc bnc" id="L98" title="All 4 branches missed.">        return edge.timeStamp &lt;= timeFilter[1] &amp;&amp; edge.timeStamp &gt;= timeFilter[0];</span>
+    }
+
+
+    /**
+     * Creates a new DWInteractionGraph from a DWInteractionGraph object
+     * and considering a list of User IDs.
+     *
+     * @param inputDWIG  a DWInteractionGraph object
+     * @param userFilter a List of User IDs. The created DWInteractionGraph
+     *                   should exclude those emails in the input
+     *                   DWInteractionGraph for which neither the sender
+     *                   nor the receiver exist in userFilter.
+     */
+<span class="nc" id="L112">    public DWInteractionGraph(DWInteractionGraph inputDWIG, List&lt;Integer&gt; userFilter) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        for (Edge inputEdge : inputDWIG.edges) {</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (withinUserFilter(inputEdge, userFilter)) {</span>
+<span class="nc" id="L115">                addToGraph(inputEdge.v1, inputEdge.v2, inputEdge.timeStamp);</span>
+            }
+<span class="nc" id="L117">        }</span>
+<span class="nc" id="L118">    }</span>
+
+    /**
+     * Creates a new DWInteractionGraph using an email interaction file
+     * and considering a time window filter.
+     * The email interaction file will be in the resources directory.
+     *
+     * @param fileName the name of the file in the resources
+     *                 directory containing email interactions
+     * @param timeFilter an integer array of length 2: [t0, t1]
+     *                   where t0 &lt;= t1. The created DWInteractionGraph
+     *                   should only include those emails in the input
+     *                   DWInteractionGraph with send time t in the
+     *                   t0 &lt;= t &lt;= t1 range.
+     */
+<span class="nc" id="L133">    public DWInteractionGraph(String fileName, int[] timeFilter) {</span>
+<span class="nc" id="L134">        int sender = 0;</span>
+<span class="nc" id="L135">        int receiver = 1;</span>
+<span class="nc" id="L136">        int timeStamp = 2;</span>
+
+        try {
+<span class="nc" id="L139">            BufferedReader reader = new BufferedReader(new FileReader(fileName));</span>
+            String currentLine;
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            while ((currentLine = reader.readLine()) != null) {</span>
+<span class="nc" id="L142">                List&lt;String&gt; dataLine = Arrays.asList(currentLine.split(&quot; &quot;).clone());</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (Integer.parseInt(dataLine.get(timeStamp)) &gt;= timeFilter[0]</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                    &amp;&amp; Integer.parseInt(dataLine.get(timeStamp)) &lt;= timeFilter[1]) {</span>
+
+<span class="nc" id="L147">                    Vertex v1 =</span>
+<span class="nc" id="L148">                        new Vertex(dataLine.get(sender), Integer.parseInt(dataLine.get(sender)));</span>
+<span class="nc" id="L149">                    Vertex v2 =</span>
+<span class="nc" id="L150">                        new Vertex(dataLine.get(receiver), Integer.parseInt(dataLine.get(receiver)));</span>
+
+<span class="nc" id="L152">                    addToGraph(v1, v2, Integer.parseInt(dataLine.get(timeStamp)));</span>
+                }
+<span class="nc" id="L154">            }</span>
+<span class="nc" id="L155">            reader.close();</span>
+<span class="nc" id="L156">        } catch (IOException e) {</span>
+<span class="nc" id="L157">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L158">        }</span>
+<span class="nc" id="L159">    }</span>
+
+    /**
+     * Helper method for DWInteractionGraph
+     *
+     * @param inputEdge  Edge object to check
+     * @param userFilter a List of User IDs. The created DWInteractionGraph
+     *                   should exclude those emails in the input
+     *                   DWInteractionGraph for which neither the sender
+     *                   nor the receiver exist in userFilter.
+     * @return True if user is contained in userFiler, false otherwise
+     */
+    private boolean withinUserFilter(Edge inputEdge, List&lt;Integer&gt; userFilter) {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        return userFilter.contains(inputEdge.v1.getContent())</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            || userFilter.contains(inputEdge.v2.getContent());</span>
+    }
+
+    /**
+     * @return a Set of Integers, where every element in the set is a User ID
+     * in this DWInteractionGraph.
+     */
+    public Set&lt;Integer&gt; getUserIDs() {
+<span class="nc" id="L181">        Set&lt;Integer&gt; userIDs = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L182">        this.vertices.stream().map(Vertex::getContent).forEach(userIDs::add);</span>
+<span class="nc" id="L183">        return userIDs;</span>
+    }
+
+    /**
+     * @param sender   the User ID of the sender in the email transaction.
+     * @param receiver the User ID of the receiver in the email transaction.
+     * @return the number of emails sent from the specified sender to the specified
+     * receiver in this DWInteractionGraph.
+     */
+    public int getEmailCount(int sender, int receiver) {
+<span class="nc" id="L193">        return representation[findUserIDInRepresentation(sender)][findUserIDInRepresentation(</span>
+            receiver)];
+    }
+
+
+    /**
+     * Given an int array, [t0, t1], reports email transaction details.
+     * Suppose an email in this graph is sent at time t, then all emails
+     * sent where t0 &lt;= t &lt;= t1 are included in this report.
+     *
+     * @param timeWindow is an int array of size 2 [t0, t1] where t0&lt;=t1.
+     * @return an int array of length 3, with the following structure:
+     * [NumberOfSenders, NumberOfReceivers, NumberOfEmailTransactions]
+     */
+    public int[] ReportActivityInTimeWindow(int[] timeWindow) {
+<span class="nc" id="L208">        return new int[] {getSenders(timeWindow).size()</span>
+<span class="nc" id="L209">            , getReceivers(timeWindow).size()</span>
+<span class="nc" id="L210">            , getNumInteractions(timeWindow)};</span>
+    }
+
+    /**
+     * Given an int array, [t0, t1], reports the number of emails sent in time frame;
+     * Suppose an email in this graph is sent at time t, then all emails
+     * sent where t0 &lt;= t &lt;= t1 are included the count.
+     *
+     * @param timeWindow is an int array of size 2 [t0, t1] where t0&lt;=t1.
+     * @return the number of email interactions
+     */
+    private int getNumInteractions(int[] timeWindow) {
+<span class="nc" id="L222">        int count = 0;</span>
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        for (Edge currentEdge : this.edges) {</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (withinTimeFilter(currentEdge, timeWindow)) {</span>
+<span class="nc" id="L226">                count++;</span>
+            }
+<span class="nc" id="L228">        }</span>
+
+<span class="nc" id="L230">        return count;</span>
+    }
+
+    /**
+     * Gets the userIDs of all the senders, if a time window is given, then only the ID's
+     * of users sent within that time frame are returned
+     *
+     * @param timeWindow timeframe given in int[t0][t1] S.T t0 &lt; t1
+     * @return Set&lt;/ Integers&gt; of senders
+     */
+    private Set&lt;Integer&gt; getSenders(int[] timeWindow) {
+<span class="nc" id="L241">        return getIntegers(timeWindow, &quot;s&quot;);</span>
+    }
+
+    /**
+     * Gets the userIDs of all the senders, if a time window is given, then only the ID's
+     * of users sent within that time frame are returned
+     *
+     * @return Set&lt;/ Integers&gt; of senders
+     */
+    private Set&lt;Integer&gt; getSenders() {
+<span class="nc" id="L251">        return getIntegers(new int[] {0, Integer.MAX_VALUE}, &quot;s&quot;);</span>
+    }
+
+    /**
+     * Gets the userIDs of all the receivers, if a time window is given, then only the ID's
+     * of users sent within that time frame are returned
+     *
+     * @param timeWindow timeframe given in int[t0][t1] S.T t0 &lt; t1
+     * @return Set&lt;/ Integers&gt; of receivers
+     */
+    private Set&lt;Integer&gt; getReceivers(int[] timeWindow) {
+<span class="nc" id="L262">        return getIntegers(timeWindow, &quot;r&quot;);</span>
+    }
+
+    /**
+     * Gets the userIDs of all the receivers, if a time window is given, then only the ID's
+     * of users sent within that time frame are returned
+     *
+     * @return Set&lt;/ Integers&gt; of receivers
+     */
+    private Set&lt;Integer&gt; getReceivers() {
+<span class="nc" id="L272">        return getIntegers(new int[] {0, Integer.MAX_VALUE}, &quot;r&quot;);</span>
+    }
+
+    /**
+     * Gets the userIDs of of the email interactions within the specified time window
+     *
+     * @param timeWindow    timeframe given in int[t0][t1] S.T t0 &lt; t1
+     * @param sendORReceive &quot;r&quot; for receivers and &quot;s&quot; for senders
+     * @return Set&lt;/ Integers&gt; of receivers or senders
+     */
+    private Set&lt;Integer&gt; getIntegers(int[] timeWindow, String sendORReceive) {
+<span class="nc" id="L283">        Set&lt;Integer&gt; validIDS = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        for (Edge currentEdge : this.edges) {</span>
+<span class="nc" id="L286">            int senderID = currentEdge.v1.getContent();</span>
+<span class="nc" id="L287">            int receiverID = currentEdge.v2.getContent();</span>
+<span class="nc" id="L288">            boolean withinTime = withinTimeFilter(currentEdge, timeWindow);</span>
+
+<span class="nc bnc" id="L290" title="All 4 branches missed.">            if (withinTime &amp;&amp; sendORReceive.equals(&quot;s&quot;)) {</span>
+<span class="nc" id="L291">                validIDS.add(senderID);</span>
+            }
+<span class="nc bnc" id="L293" title="All 4 branches missed.">            if (withinTime &amp;&amp; sendORReceive.equals(&quot;r&quot;)) {</span>
+<span class="nc" id="L294">                validIDS.add(receiverID);</span>
+            }
+<span class="nc" id="L296">        }</span>
+<span class="nc" id="L297">        return validIDS;</span>
+    }
+
+
+    /**
+     * Given a User ID, reports the specified User's email transaction history.
+     *
+     * @param userID the User ID of the user for which the report will be
+     *               created.
+     * @return an int array of length 3 with the following structure:
+     * [NumberOfEmailsSent, NumberOfEmailsReceived, UniqueUsersInteractedWith]
+     * If the specified User ID does not exist in this instance of a graph,
+     * returns [0, 0, 0].
+     */
+    public int[] ReportOnUser(int userID) {
+
+<span class="nc bnc" id="L313" title="All 4 branches missed.">        if (!(getSenders().contains(userID)) &amp;&amp; !(getReceivers().contains(userID))) {</span>
+<span class="nc" id="L314">            return new int[] {0, 0, 0};</span>
+        }
+
+<span class="nc" id="L317">        int currentUserID = findUserIDInRepresentation(userID);</span>
+
+<span class="nc" id="L319">        int NumberOfEmailsSent = 0;</span>
+<span class="nc" id="L320">        int NumberOfEmailsReceived = 0;</span>
+<span class="nc" id="L321">        int UniqueUsersInteractedWith = 0;</span>
+
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        for (int i = 0; i &lt; representation.length; i++) {</span>
+
+<span class="nc" id="L325">            NumberOfEmailsSent += representation[currentUserID][i];</span>
+
+<span class="nc" id="L327">            NumberOfEmailsReceived += representation[i][currentUserID];</span>
+
+<span class="nc bnc" id="L329" title="All 4 branches missed.">            if (!(representation[currentUserID][i] == 0</span>
+                &amp;&amp; representation[i][currentUserID] == 0)) {
+<span class="nc" id="L331">                UniqueUsersInteractedWith++;</span>
+            }
+        }
+
+<span class="nc" id="L335">        return new int[] {NumberOfEmailsSent, NumberOfEmailsReceived, UniqueUsersInteractedWith};</span>
+    }
+
+    /**
+     * Helper Function to find the matching index in representation[][] to the given user ID
+     * from the data source
+     *
+     * @param userID ID of the user to find
+     * @return int the matches the user in representation[][]
+     */
+    private int findUserIDInRepresentation(int userID) {
+<span class="nc" id="L346">        return this.vertices.indexOf(new Vertex(Integer.toString(userID), userID));</span>
+    }
+
+    /**
+     * @param N               a positive number representing rank. N=1 means the most active.
+     * @param interactionType Represent the type of interaction to calculate the rank for
+     *                        Can be SendOrReceive.Send or SendOrReceive.RECEIVE
+     * @return the User ID for the Nth most active user in specified interaction type.
+     * Sorts User IDs by their number of sent or received emails first. In the case of a
+     * tie, secondarily sorts the tied User IDs in ascending order.
+     */
+    public int NthMostActiveUser(int N, SendOrReceive interactionType) {
+
+<span class="nc" id="L359">        Map&lt;Integer, Integer&gt; rankedMap = new HashMap&lt;&gt;();</span>
+
+        Set&lt;Integer&gt; interactions;
+
+<span class="nc" id="L363">        boolean send = false;</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">        if (interactionType == SendOrReceive.SEND) {</span>
+<span class="nc" id="L366">            interactions = getSenders();</span>
+<span class="nc" id="L367">            send = true;</span>
+        } else {
+<span class="nc" id="L369">            interactions = getReceivers();</span>
+        }
+
+<span class="nc bnc" id="L372" title="All 2 branches missed.">        for (Integer currentUser : interactions) {</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">            if (send) {</span>
+<span class="nc" id="L374">                rankedMap.put(currentUser, ReportOnUser(currentUser)[0]);</span>
+            } else {
+<span class="nc" id="L376">                rankedMap.put(currentUser, ReportOnUser(currentUser)[1]);</span>
+            }
+<span class="nc" id="L378">        }</span>
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">        if (rankedMap.size() &lt; N) {</span>
+<span class="nc" id="L381">            return -1;</span>
+        }
+
+<span class="nc" id="L384">        List&lt;Integer&gt; sortedValues = new ArrayList&lt;&gt;(rankedMap.values());</span>
+<span class="nc" id="L385">        sortedValues.sort(Collections.reverseOrder());</span>
+
+<span class="nc" id="L387">        int NthUserValue = sortedValues.get(N - 1);</span>
+
+<span class="nc" id="L389">        Map&lt;Integer, Integer&gt; mostActive = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L391" title="All 2 branches missed.">        for (Map.Entry&lt;Integer, Integer&gt; entry : rankedMap.entrySet()) {</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">            if (entry.getValue() == NthUserValue) {</span>
+<span class="nc" id="L393">                mostActive.put(entry.getKey(), entry.getValue());</span>
+            }
+<span class="nc" id="L395">        }</span>
+
+<span class="nc" id="L397">        List&lt;Integer&gt; mostActiveUserIDs = new ArrayList&lt;&gt;(mostActive.keySet());</span>
+<span class="nc" id="L398">        Collections.sort(mostActiveUserIDs);</span>
+
+<span class="nc bnc" id="L400" title="All 2 branches missed.">        if (mostActiveUserIDs.size() == 1) {</span>
+<span class="nc" id="L401">            return mostActiveUserIDs.get(0);</span>
+        }
+
+<span class="nc" id="L404">        return mostActiveUserIDs.get(N - 1);</span>
+    }
+
+    /* ------- Task 3 ------- */
+
+    /**
+     * performs breadth first search on the DWInteractionGraph object
+     * to check path between user with userID1 and user with userID2.
+     *
+     * @param userID1 the user ID for the first user
+     * @param userID2 the user ID for the second user
+     * @return if a path exists, returns aa list of user IDs
+     * in the order encountered in the search.
+     * if no path exists, should return null.
+     */
+    public List&lt;Integer&gt; BFS(int userID1, int userID2) {
+<span class="nc" id="L420">        int NOT_FOUND = -1;</span>
+<span class="nc" id="L421">        Queue&lt;Integer&gt; queue = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L422">        boolean[] visited = new boolean[vertices.size()];</span>
+<span class="nc" id="L423">        visited[findUserIDInRepresentation(userID1)] = true;</span>
+<span class="nc" id="L424">        queue.add(findUserIDInRepresentation(userID1));</span>
+<span class="nc" id="L425">        List&lt;Integer&gt; path = new ArrayList&lt;Integer&gt;();</span>
+<span class="nc" id="L426">        Integer[] previous = new Integer[vertices.size()];</span>
+
+<span class="nc bnc" id="L428" title="All 2 branches missed.">        while (!queue.isEmpty()) {</span>
+<span class="nc" id="L429">            int current_user = queue.poll();</span>
+<span class="nc" id="L430">            int userId = vertices.get(current_user).getContent();</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">            if (!path.contains(userId)) {</span>
+<span class="nc" id="L432">                path.add(userId);</span>
+            }
+
+            int unvisitedNeighbourIndex;
+<span class="nc" id="L436">            List&lt;Integer&gt; nextLayer = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L438" title="All 2 branches missed.">            while ((unvisitedNeighbourIndex = findUnvisitedNeighbour(current_user, visited)) != NOT_FOUND) {</span>
+<span class="nc" id="L439">                queue.add(unvisitedNeighbourIndex);</span>
+<span class="nc" id="L440">                nextLayer.add(vertices.get(unvisitedNeighbourIndex).getContent());</span>
+<span class="nc" id="L441">                visited[unvisitedNeighbourIndex] = true;</span>
+<span class="nc" id="L442">                previous[unvisitedNeighbourIndex] = current_user;</span>
+            }
+<span class="nc" id="L444">            Collections.sort(nextLayer);</span>
+
+<span class="nc bnc" id="L446" title="All 2 branches missed.">            for (int user : nextLayer) {</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                if (user == userID2) {</span>
+<span class="nc" id="L448">                    path.add(user);</span>
+<span class="nc" id="L449">                    break;</span>
+                }
+<span class="nc bnc" id="L451" title="All 2 branches missed.">                if (!path.contains(user)) {</span>
+<span class="nc" id="L452">                    path.add(user);</span>
+                }
+<span class="nc" id="L454">            }</span>
+
+<span class="nc bnc" id="L456" title="All 2 branches missed.">            if (path.contains(userID2)) {</span>
+<span class="nc" id="L457">                break;</span>
+            }
+<span class="nc" id="L459">        }</span>
+
+<span class="nc" id="L461">        boolean isPath = isPath(findUserIDInRepresentation(userID1),</span>
+<span class="nc" id="L462">            findUserIDInRepresentation(userID2), previous);</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">        if (!isPath) {</span>
+<span class="nc" id="L464">            return null;</span>
+        }
+
+<span class="nc" id="L467">        return path;</span>
+    }
+
+    /**
+     * Checks if there is a  path that exists from the endNode to the startNode
+     *
+     * @param startNode int index of the base node of path in this.vertices
+     * @param endNode   int index of the end node of the path in this.vertices
+     * @param previous  Integer list of which the index of a node refers to the parent node
+     * @return true if there is a path from the endNode to the startNode, and false otherwise
+     */
+    private boolean isPath(int startNode, int endNode, Integer[] previous) {
+<span class="nc" id="L479">        List&lt;Integer&gt; path = new ArrayList&lt;Integer&gt;();</span>
+
+<span class="nc bnc" id="L481" title="All 2 branches missed.">        for (Integer i = endNode; i != null; i = previous[i]) {</span>
+<span class="nc" id="L482">            path.add(i);</span>
+        }
+<span class="nc" id="L484">        Collections.reverse(path);</span>
+
+<span class="nc bnc" id="L486" title="All 2 branches missed.">        return path.get(0) == startNode;</span>
+    }
+
+
+    /**
+     * Find a neighbouring vertex that has not been visited from a given vertex
+     *
+     * @param indexOfVertex   int index of a vertex v in this.vertices
+     * @param visitedVertices a boolean array that is true if a vertex has been visited and false
+     *                        otherwise. Array is not null.
+     * @return int index of a vertex in this.vertices that is a neighbour of the vertex that
+     * indexOfVertex refers to. If no neighbours exits returns -1.
+     */
+    private int findUnvisitedNeighbour(int indexOfVertex, boolean[] visitedVertices) {
+<span class="nc" id="L500">        int NOT_FOUND = -1;</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">        for (int i = 0; i &lt; representation.length; i++) {</span>
+<span class="nc bnc" id="L502" title="All 4 branches missed.">            if (representation[indexOfVertex][i] &gt; 0 &amp;&amp; !visitedVertices[i]) {</span>
+<span class="nc" id="L503">                return i;</span>
+            }
+        }
+<span class="nc" id="L506">        return NOT_FOUND;</span>
+    }
+
+    /**
+     * performs depth first search on the DWInteractionGraph object
+     * to check path between user with userID1 and user with userID2.
+     *
+     * @param userID1 the user ID for the first user
+     * @param userID2 the user ID for the second user
+     * @return if a path exists, returns aa list of user IDs
+     * in the order encountered in the search.
+     * if no path exists, should return null.
+     */
+    public List&lt;Integer&gt; DFS(int userID1, int userID2) {
+<span class="nc" id="L520">        List&lt;Integer&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L521">        boolean[] visitedVertices = new boolean[vertices.size()];</span>
+<span class="nc" id="L522">        Stack&lt;Integer&gt; stack = new Stack&lt;&gt;();</span>
+<span class="nc" id="L523">        stack.add(userID1);</span>
+
+<span class="nc bnc" id="L525" title="All 2 branches missed.">        while (!stack.isEmpty()) {</span>
+<span class="nc" id="L526">            int nodeContent = stack.pop();</span>
+<span class="nc" id="L527">            int nodeInRep = findUserIDInRepresentation(nodeContent);</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">            if (!path.contains(nodeContent)) {</span>
+<span class="nc" id="L529">                path.add(nodeContent);</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">                if (path.contains(userID2)) {</span>
+<span class="nc" id="L531">                    break;</span>
+                }
+            }
+
+<span class="nc" id="L535">            List&lt;Integer&gt; neighbours = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">            if (!visitedVertices[nodeInRep]) {</span>
+<span class="nc" id="L537">                visitedVertices[nodeInRep] = true;</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">                for (int i = 0; i &lt; representation.length; i++) {</span>
+<span class="nc bnc" id="L539" title="All 4 branches missed.">                    if (representation[nodeInRep][i] &gt; 0 &amp;&amp; !visitedVertices[i]) {</span>
+<span class="nc" id="L540">                        int neighbourContent = vertices.get(i).getContent();</span>
+<span class="nc" id="L541">                        neighbours.add(neighbourContent);</span>
+                    }
+                }
+            }
+<span class="nc" id="L545">            Collections.sort(neighbours, Collections.reverseOrder());</span>
+<span class="nc" id="L546">            stack.addAll(neighbours);</span>
+<span class="nc" id="L547">        }</span>
+
+<span class="nc bnc" id="L549" title="All 2 branches missed.">        if (path.get(path.size()-1) != userID2) {</span>
+<span class="nc" id="L550">            return null;</span>
+        }
+
+<span class="nc" id="L553">        return path;</span>
+    }
+
+    @Override
+    public void addVertex(Vertex v) {
+<span class="nc bnc" id="L558" title="All 2 branches missed.">        if (!vertices.contains(v)) {</span>
+<span class="nc" id="L559">            this.vertices.add(v);</span>
+<span class="nc bnc" id="L560" title="All 2 branches missed.">            if (vertices.size() &lt;= matSize) {</span>
+<span class="nc" id="L561">                updateRep();</span>
+            }
+        }
+
+<span class="nc" id="L565">    }</span>
+
+    @Override
+    public void addEdge(Vertex v1, Vertex v2, int timeStamp) {
+<span class="nc" id="L569">        int v1Index = this.vertices.indexOf(v1);</span>
+<span class="nc" id="L570">        int v2Index = this.vertices.indexOf(v2);</span>
+
+<span class="nc bnc" id="L572" title="All 2 branches missed.">        if (edgeExists(v1, v2, timeStamp)) {</span>
+<span class="nc" id="L573">            representation[v1Index][v2Index] += 1;</span>
+<span class="nc" id="L574">            this.edges.add(new Edge(v1, v2, timeStamp));</span>
+        } else {
+<span class="nc" id="L576">            this.edges.add(new Edge(v1, v2, timeStamp));</span>
+<span class="nc" id="L577">            representation[v1Index][v2Index] = 1;</span>
+        }
+
+<span class="nc" id="L580">    }</span>
+
+    @Override
+    public boolean edgeExists(Vertex v1, Vertex v2, int timeStamp) {
+<span class="nc" id="L584">        return edges.contains(new Edge(v1, v2, timeStamp));</span>
+    }
+
+    private void updateRep() {
+<span class="nc" id="L588">        int newLength = representation.length + 1;</span>
+<span class="nc" id="L589">        int[][] tempRep = new int[newLength][newLength];</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">        for (int i = 0; i &lt; representation.length; i++) {</span>
+<span class="nc" id="L591">            System.arraycopy(representation[i], 0, tempRep[i], 0, representation.length);</span>
+        }
+<span class="nc" id="L593">        representation = tempRep;</span>
+<span class="nc" id="L594">        matSize = newLength;</span>
+<span class="nc" id="L595">    }</span>
+
+    /**
+     * Adds a new entry to the graph
+     *
+     * @param sender    vertex object of the sender
+     * @param receiver  vertex object of the receiver
+     * @param timeStamp timestamp of the email interaction
+     */
+    private void addToGraph(Vertex sender, Vertex receiver, int timeStamp) {
+<span class="nc" id="L605">        addVertex(sender);</span>
+<span class="nc" id="L606">        addVertex(receiver);</span>
+<span class="nc" id="L607">        addEdge(sender, receiver, timeStamp);</span>
+<span class="nc" id="L608">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

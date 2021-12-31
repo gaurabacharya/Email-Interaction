@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="gacharya.email.Task3DWTests" tests="4" skipped="0" failures="0" errors="0" timestamp="2021-12-31T00:26:37" hostname="Gaurabs-MacBook-Pro-2.local" time="0.068">
+  <properties/>
+  <testcase name="testBFSGraph1()" classname="gacharya.email.Task3DWTests" time="0.06"/>
+  <testcase name="testBFSGraph2()" classname="gacharya.email.Task3DWTests" time="0.002"/>
+  <testcase name="testDFSGraph1()" classname="gacharya.email.Task3DWTests" time="0.002"/>
+  <testcase name="testDFSGraph2()" classname="gacharya.email.Task3DWTests" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
